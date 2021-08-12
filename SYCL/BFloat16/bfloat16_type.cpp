@@ -46,9 +46,10 @@ void verify_conv_explicit(queue &q, buffer<float, 1> &a, range<1> &r,
                           const float ref) {
   q.submit([&](handler &cgh) {
     auto A = a.get_access<access::mode::read_write>(cgh);
-    cgh.parallel_for<class calc_conv>(r, [=](id<1> index) {
-      cl::sycl::ext::intel::experimental::bfloat16 AVal = from_float(A[index]);
-      A[index] = to_float(AVal);
+    cgh.parallel_for<class calc_conv_impl>(r, [=](id<1> index) {
+      uint16_t AVal =
+          cl::sycl::ext::intel::experimental::bfloat16::from_float(A[index]);
+      A[index] = cl::sycl::ext::intel::experimental::bfloat16::to_float(AVal);
     });
   });
 
@@ -63,7 +64,7 @@ void verify_add(queue &q, buffer<float, 1> &a, buffer<float, 1> &b, range<1> &r,
     auto A = a.get_access<access::mode::read>(cgh);
     auto B = b.get_access<access::mode::read>(cgh);
     auto C = c.get_access<access::mode::write>(cgh);
-    cgh.parallel_for<class calc_add>(r, [=](id<1> index) {
+    cgh.parallel_for<class calc_add_expl>(r, [=](id<1> index) {
       cl::sycl::ext::intel::experimental::bfloat16 AVal{A[index]};
       cl::sycl::ext::intel::experimental::bfloat16 BVal{B[index]};
       cl::sycl::ext::intel::experimental::bfloat16 CVal = AVal + BVal;
@@ -74,7 +75,7 @@ void verify_add(queue &q, buffer<float, 1> &a, buffer<float, 1> &b, range<1> &r,
   assert_close(c.get_access<access::mode::read>(), ref);
 }
 
-void verify_min(queue &q, buffer<float, 1> &a, buffer<float, 1> &b, range<1> &r,
+void verify_sub(queue &q, buffer<float, 1> &a, buffer<float, 1> &b, range<1> &r,
                 const float ref) {
   buffer<float, 1> c{r};
 
@@ -82,7 +83,7 @@ void verify_min(queue &q, buffer<float, 1> &a, buffer<float, 1> &b, range<1> &r,
     auto A = a.get_access<access::mode::read>(cgh);
     auto B = b.get_access<access::mode::read>(cgh);
     auto C = c.get_access<access::mode::write>(cgh);
-    cgh.parallel_for<class calc_min>(r, [=](id<1> index) {
+    cgh.parallel_for<class calc_sub>(r, [=](id<1> index) {
       cl::sycl::ext::intel::experimental::bfloat16 AVal{A[index]};
       cl::sycl::ext::intel::experimental::bfloat16 BVal{B[index]};
       cl::sycl::ext::intel::experimental::bfloat16 CVal = AVal - BVal;
@@ -139,19 +140,23 @@ void verify_logic(queue &q, buffer<float, 1> &a, buffer<float, 1> &b,
     auto A = a.get_access<access::mode::read>(cgh);
     auto B = b.get_access<access::mode::read>(cgh);
     auto C = c.get_access<access::mode::write>(cgh);
-    cgh.parallel_for<class calc_add>(r, [=](id<1> index) {
+    cgh.parallel_for<class logic>(r, [=](id<1> index) {
       cl::sycl::ext::intel::experimental::bfloat16 AVal{A[index]};
       cl::sycl::ext::intel::experimental::bfloat16 BVal{B[index]};
       if (AVal && !BVal) {
-        if (AVal > BVal || AVal >= BVal || AVal < BVal || AVal <= BVal)
+        if (AVal > BVal || AVal >= BVal || AVal < BVal || AVal <= BVal) {
           cl::sycl::ext::intel::experimental::bfloat16 CVal =
               AVal != BVal ? AVal : BVal;
           CVal--;
           CVal++;
-          if (AVal == BVal)
-            CVal += AVal;
+          if (AVal == BVal) {
+            CVal -= AVal;
+            CVal *= 3.0;
+            CVal /= 2.0;
+          }
           else
             CVal += BVal;
+        }
       }
     });
   });
@@ -162,8 +167,9 @@ void verify_logic(queue &q, buffer<float, 1> &a, buffer<float, 1> &b,
 int main() {
   device dev{default_selector()};
 
-  if (!dev.has(aspect::ext_intel_bf16_conversio()) {
-    std::cout << "This device doesn't support bfloat16 type" << std::endl;
+  if (!dev.has(aspect::ext_intel_bf16_conversion)) {
+    std::cout << "This device doesn't support bfloat16 conversion feature"
+              << std::endl;
     return 0;
   }
 
@@ -181,12 +187,12 @@ int main() {
   verify_conv_implicit(q, a, r, 5.0);
   verify_conv_explicit(q, a, r, 5.0);
   verify_add(q, a, b, r, 7.0);
-  verify_min(q, a, b, r, 3.0);
+  verify_sub(q, a, b, r, 3.0);
   verify_mul(q, a, b, r, 10.0);
   verify_div(q, a, b, r, 2.5);
   verify_logic(q, a, b, r, 7.0);
   verify_add(q, a, b_neg, r, 3.0);
-  verify_min(q, a, b_neg, r, 7.0);
+  verify_sub(q, a, b_neg, r, 7.0);
   verify_mul(q, a, b_neg, r, -10.0);
   verify_div(q, a, b_neg, r, -2.5);
   verify_logic(q, a, b_neg, r, 3.0);
