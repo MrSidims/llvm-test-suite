@@ -166,7 +166,9 @@ void verify_logic(queue &q, buffer<float, 1> &a, buffer<float, 1> &b,
 int main() {
   device dev{default_selector()};
 
-  if (!dev.has(aspect::ext_intel_bf16_conversion)) {
+  // TODO: replace is_gpu check with extension check when the appropriate part
+  // of implementation ready (aspect)
+  if (!dev.is_gpu()) {
     std::cout << "This device doesn't support bfloat16 conversion feature"
               << std::endl;
     return 0;
