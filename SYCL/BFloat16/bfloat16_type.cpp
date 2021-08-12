@@ -153,8 +153,7 @@ void verify_logic(queue &q, buffer<float, 1> &a, buffer<float, 1> &b,
             CVal -= AVal;
             CVal *= 3.0;
             CVal /= 2.0;
-          }
-          else
+          } else
             CVal += BVal;
         }
       }
