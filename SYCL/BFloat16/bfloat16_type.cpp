@@ -23,15 +23,7 @@ using namespace cl::sycl;
 
 constexpr size_t N = 100;
 
-template <typename T> void assert_close(const T &C, const float ref) {
-  for (size_t i = 0; i < N; i++) {
-    auto diff = C[i] - ref;
-    assert(std::fabs(static_cast<float>(diff)) <
-           std::numeric_limits<float>::epsilon());
-  }
-}
-
-uint16_t lib_from_float(float Val) {
+uint16_t lib_to_float(float Val) {
 #ifdef __SYCL_ENABLE_BF16_CONVERSION__
   return cl::sycl::ext::intel::experimental::bfloat16::from_float(Val);
 #else
@@ -41,7 +33,7 @@ uint16_t lib_from_float(float Val) {
 #endif // __SYCL_ENABLE_BF16_CONVERSION__
 }
 
-float lib_to_float(uint16_t Val) {
+float lib_from_float(uint16_t Val) {
 #ifdef __SYCL_ENABLE_BF16_CONVERSION__
   return cl::sycl::ext::intel::experimental::bfloat16::to_float(Val);
 #else
@@ -50,6 +42,7 @@ float lib_to_float(uint16_t Val) {
   return (float)(Val);
 #endif // __SYCL_ENABLE_BF16_CONVERSION__
 }
+
 
 void verify_conv_lib(queue &q, buffer<float, 1> &a, range<1> &r,
                      const float ref) {
@@ -62,6 +55,14 @@ void verify_conv_lib(queue &q, buffer<float, 1> &a, range<1> &r,
   });
 
   assert_close(a.get_access<access::mode::read>(), ref);
+}
+
+template <typename T> void assert_close(const T &C, const float ref) {
+  for (size_t i = 0; i < N; i++) {
+    auto diff = C[i] - ref;
+    assert(std::fabs(static_cast<float>(diff)) <
+           std::numeric_limits<float>::epsilon());
+  }
 }
 
 void verify_conv_implicit(queue &q, buffer<float, 1> &a, range<1> &r,
