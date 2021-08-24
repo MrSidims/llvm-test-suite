@@ -143,8 +143,9 @@ void verify_logic(queue &q, buffer<float, 1> &a, buffer<float, 1> &b,
     cgh.parallel_for<class logic>(r, [=](id<1> index) {
       cl::sycl::ext::intel::experimental::bfloat16 AVal{A[index]};
       cl::sycl::ext::intel::experimental::bfloat16 BVal{B[index]};
-      if (AVal && !BVal) {
-        if (AVal > BVal || AVal >= BVal || AVal < BVal || AVal <= BVal) {
+      if (AVal) {
+        if (AVal > BVal || AVal >= BVal || AVal < BVal || AVal <= BVal ||
+            !BVal) {
           cl::sycl::ext::intel::experimental::bfloat16 CVal =
               AVal != BVal ? AVal : BVal;
           CVal--;
