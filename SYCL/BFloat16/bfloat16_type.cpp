@@ -1,8 +1,10 @@
 // RUN: %clangxx -fsycl -fsycl-targets=%sycl_triple %s -o %t.out
-// RUN: %HOST_RUN_PLACEHOLDER %t.out
-// RUN: %CPU_RUN_PLACEHOLDER %t.out
-// RUN: %GPU_RUN_PLACEHOLDER %t.out
-// RUN: %ACC_RUN_PLACEHOLDER %t.out
+// TODO currently the feature isn't supported on most of the devices
+//      need to enable the test when the aspect and device_if feature are
+//      introduced
+// RUNx: %CPU_RUN_PLACEHOLDER %t.out
+// RUNx: %GPU_RUN_PLACEHOLDER %t.out
+// RUNx: %ACC_RUN_PLACEHOLDER %t.out
 
 //==----------- bfloat16_type.cpp - SYCL bfloat16 type test ----------------==//
 //
