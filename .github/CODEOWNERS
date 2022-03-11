@@ -77,7 +77,7 @@ SYCL/USM @jbrodman @sergey-semenov
 SYCL/Basic/stream @againull
 
 #BFloat16 conversion
-SYCL/BFloat16 @AlexeySotkin @MrSidims
+SYCL/BFloat16 @MrSidims
 
 # Deprecated features
 SYCL/DeprecatedFeatures @intel/llvm-reviewers-runtime
