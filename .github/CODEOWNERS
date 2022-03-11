@@ -38,7 +38,7 @@ SYCL/Functor @AlexeySachkov
 # Group algorithms
 SYCL/GroupAlgorithm @Pennycook @AlexeySachkov
 SYCL/SubGroup @Pennycook @AlexeySachkov
-SYCL/SubGroupMask @Pennycook @vladimilaz
+SYCL/SubGroupMask @Pennycook @vladimirlaz
 
 # Group local memory
 SYCL/GroupLocalMemory @sergey-semenov @Pennycook
